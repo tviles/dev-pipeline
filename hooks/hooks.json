@@ -1,0 +1,68 @@
+{
+  "description": "dev-pipeline plugin hooks — agent-scoped via self-filtering on agent_type",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/skills/save-task-list/hooks/verify-task-list.sh\"",
+            "statusMessage": "Checking for restored task list..."
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/skills/rulecheck/hooks/block-dangerous.sh\"",
+            "statusMessage": "Checking command safety..."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/skills/rulecheck/hooks/auto-lint-fix.sh\"",
+            "statusMessage": "Auto-fixing lint issues..."
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/skills/triage/hooks/validate-labels.sh\"",
+            "statusMessage": "Validating label application..."
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "rulecheck-agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/skills/rulecheck/hooks/slack-notify.sh\"",
+            "statusMessage": "Notifying Slack..."
+          },
+          {
+            "type": "agent",
+            "prompt": "You are a meta-judge evaluating the rulecheck agent's execution.\n\nThe agent just finished a run. Here is its final message:\n\n$ARGUMENTS\n\n## Your Task\n\n1. **Review the work**: What violations did the agent find and fix?\n2. **Evaluate prioritization**: Were the right items addressed first?\n3. **Check quality**: Were fixes correct and non-breaking?\n4. **Check PR format**: Did it follow the project's PR template?\n5. **Assess validation**: Did `bun run validate` pass?\n\n## Write Feedback\n\nWrite structured feedback to `.claude/agent-memory/rulecheck-agent/meta-judge-feedback.md`:\n\n```markdown\n# Meta-Judge Feedback — ${CLAUDE_SESSION_ID}\n\n## Run Assessment\n- **Quality**: [1-5] — were fixes correct?\n- **Prioritization**: [1-5] — were the right things fixed?\n- **Completeness**: [1-5] — was validation thorough?\n\n## What Went Well\n- ...\n\n## Improvement Suggestions\n- ...\n\n## Recommendations for Next Run\n- ...\n```\n\nAlways return `{\"ok\": true}` — the agent should always be allowed to stop.\nThe value is in the written feedback, not in blocking.",
+            "statusMessage": "Running meta-judge evaluation..."
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "dev-pipeline",
+  "version": "0.1.0",
+  "description": "AI development workflow plugin — routes coding tasks through specialized cookbooks (research, plan, implement, review, debug, commit, PR, triage) with agent-scoped safety hooks, autonomous rule enforcement, and task-list persistence.",
+  "author": {
+    "name": "Tyler Viles",
+    "url": "https://github.com/tviles"
+  },
+  "repository": "https://github.com/tviles/dev-pipeline.git",
+  "license": "MIT",
+  "keywords": ["development", "workflow", "planning", "code-review", "tdd", "github", "autonomous"]
+}
